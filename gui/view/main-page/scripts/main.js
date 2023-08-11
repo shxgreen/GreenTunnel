@@ -16,13 +16,13 @@ $( document ).ready(function() {
                 $(this).find('*').removeClass('red');
                 $(this).find('*').addClass('green');
             });
-            $('#status-off-on').html('is on');
+            $('#status-off-on').html('已开启');
         } else {
             $('.toggle').each(() => {
                 $(this).find('*').removeClass('green');
                 $(this).find('*').addClass('red');
             });
-            $('#status-off-on').html('is off');
+            $('#status-off-on').html('已关闭');
         }
     })
 

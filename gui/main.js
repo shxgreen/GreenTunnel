@@ -8,7 +8,7 @@ const os = require('os');
 // diable any dialog box!
 const electron = require('electron');
 const dialog = electron.dialog;
-dialog.showErrorBox = function(title, content) {
+dialog.showErrorBox = function (title, content) {
     console.log(`${title}\n${content}`);
 };
 
@@ -21,6 +21,17 @@ if (setupEvents.handleSquirrelEvent()) {
 
 let win, tray, proxy;
 let isOn = false;
+
+proxy = new Proxy({
+    source: 'GUI', 
+    dns: {
+        type: 'https', // 'tls' or 'https' or 'unencrypted'
+        server: 'https://dns.alidns.com/dns-query',
+        ip: '127.0.0.1',
+        port: 53,
+        cacheSize: 1000,
+    }
+});
 
 const menuItems = [
     {
@@ -36,16 +47,6 @@ const menuItems = [
         type: 'separator',
     },
     {
-        label: 'Source Code',
-        type: 'normal',
-        click: () => shell.openExternal('https://github.com/SadeghHayeri/GreenTunnel'),
-    },
-    {
-        label: 'Donate',
-        type: 'normal',
-        click: () => shell.openExternal('https://github.com/SadeghHayeri/GreenTunnel#donation'),
-    },
-    {
         role: 'quit',
         label: 'Quit',
         type: 'normal',
@@ -57,7 +58,8 @@ async function turnOff() {
 
     if (proxy) {
         await proxy.stop();
-        proxy = null
+        await proxy.start({ setProxy: false });
+        // proxy = null
     }
 
     win.webContents.send('changeStatus', isOn);
@@ -74,12 +76,11 @@ async function turnOff() {
 async function turnOn() {
     isOn = true;
 
-    if (proxy) {
-        await turnOff()
-    }
-
-    proxy = new Proxy({source: 'GUI'});
-    await proxy.start({setProxy: true});
+    // if (proxy) {
+    //     await turnOff()
+    // }
+    await proxy.stop();
+    await proxy.start({ setProxy: true });
 
     win.webContents.send('changeStatus', isOn);
 
@@ -123,7 +124,7 @@ function createWindow() {
 
     win.loadFile('./view/main-page/index.html');
 
-    win.on('ready-to-show', function() {
+    win.on('ready-to-show', function () {
         win.show();
         win.focus();
         turnOn();
@@ -133,7 +134,7 @@ function createWindow() {
         win = null
     });
 
-    if(debug)
+    if (debug)
         win.webContents.openDevTools()
 }
 
@@ -160,7 +161,7 @@ app.on('ready', () => {
 });
 
 app.on('before-quit', async (e) => {
-    if(isOn) {
+    if (isOn) {
         e.preventDefault();
         await turnOff();
         app.quit();
@@ -168,14 +169,14 @@ app.on('before-quit', async (e) => {
 });
 
 ipcMain.on('close-button', (event, arg) => {
-    if(os.platform() === 'darwin')
+    if (os.platform() === 'darwin')
         app.hide();
     else
         app.quit();
 });
 
 ipcMain.on('on-off-button', (event, arg) => {
-    if(isOn)
+    if (isOn)
         turnOff();
     else
         turnOn();
